@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Parking Search & Allocation System | DSA Mini Project</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-sky-500 selection:text-slate-950 font-sans">
+
+  <!-- TOP HEADER & UNIVERSITY LAB IDENTITY -->
+  <header class="glass-header sticky top-0 z-50">
+    <!-- University / Lab Sub-bar -->
+    <div class="bg-slate-950/80 border-b border-slate-800/80 py-1.5 px-4 sm:px-6 lg:px-8 text-[11px] font-mono text-slate-400 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-slate-300 font-semibold uppercase tracking-wider">CS-301: Data Structures & Algorithms Lab</span>
+        <span class="hidden md:inline text-slate-600">|</span>
+        <span class="hidden md:inline text-slate-400">Department of Computer Engineering</span>
+      </div>
+
+      <!-- Student credentials pill with Edit action -->
+      <div class="flex items-center gap-2">
+        <div id="student-info-badge" class="student-badge px-2.5 py-0.5 rounded-full text-[11px] flex items-center gap-1.5">
+          <!-- Rendered by app.js -->
+        </div>
+        <button onclick="App.openEditProfileModal()" title="Edit Student Credentials" class="text-slate-400 hover:text-sky-400 transition text-[11px]">
+          ✏️ Edit
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Title & System Stats Bar -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      
+      <!-- Project Title & DSA Tags -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 text-white font-black text-lg shrink-0">
+          🅿️
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-2">
+              Smart Parking Search & Allocation System
+            </h1>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              Mini Project
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-mono flex items-center gap-2 mt-0.5">
+            <span>Binary Search <span class="text-sky-500">•</span> Min-Heap <span class="text-sky-500">•</span> QuickSort <span class="text-sky-500">•</span> Priority Queue</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Live Stats & Quick Actions -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono">
+        <div class="glass-card px-3 py-1.5 rounded-xl border border-slate-800 flex items-center gap-2">
+          <span class="text-slate-400">Total:</span>
+          <span id="stat-total-slots" class="font-bold text-white text-sm">--</span>
+        </div>
+        <div class="glass-card px-3 py-1.5 rounded-xl border border-emerald-900/40 bg-emerald-950/20 flex items-center gap-2">
+          <span class="text-emerald-400">Available:</span>
+          <span id="stat-avail-slots" class="font-bold text-emerald-300 text-sm">--</span>
+        </div>
+        <div class="glass-card px-3 py-1.5 rounded-xl border border-rose-900/40 bg-rose-950/20 flex items-center gap-2">
+          <span class="text-rose-400">Occupied:</span>
+          <span id="stat-occ-slots" class="font-bold text-rose-300 text-sm">--</span>
+        </div>
+        <div class="glass-card px-3 py-1.5 rounded-xl border border-amber-900/40 bg-amber-950/20 flex items-center gap-2">
+          <span class="text-amber-400">Waiting (Heap):</span>
+          <span id="stat-wait-vehicles" class="font-bold text-amber-300 text-sm">--</span>
+        </div>
+
+        <!-- Viva Scenarios Dropdown -->
+        <div class="relative group">
+          <button class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+            <span>⚡ Viva Scenarios</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="absolute right-0 top-full mt-1.5 w-64 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-2 hidden group-hover:block z-50 text-left font-sans">
+            <div class="text-[10px] font-bold text-slate-400 font-mono px-2 py-1 uppercase">1-Click Examiner Demo:</div>
+            <button onclick="App.runScenario('rush-hour')" class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-200 transition">
+              🚗 Morning Rush (3 Cars via Min-Heap)
+            </button>
+            <button onclick="App.runScenario('emergency')" class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-200 transition">
+              🚨 Ambulance Priority (Max-Heap Root)
+            </button>
+            <button onclick="App.runScenario('release-realloc')" class="w-full text-left px-2 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-200 transition">
+              🔄 Release & Auto-Reallocate to Queue
+            </button>
+          </div>
+        </div>
+
+        <button onclick="App.handleSystemReset()" title="Reset Database to Clean Demo State" 
+                class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Reset Demo
+        </button>
+      </div>
+
+    </div>
+
+    <!-- NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-800/80 flex overflow-x-auto gap-2 py-2 text-xs">
+      <button class="nav-tab active px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="lot-grid">
+        <span>🗺️ Parking Lot Grid</span>
+      </button>
+
+      <button class="nav-tab px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="smart-allocate">
+        <span>⚡ Allocate & Release</span>
+      </button>
+
+      <button class="nav-tab px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="dsa-visualizer">
+        <span>🌲 DSA Visualizer & Sandbox</span>
+      </button>
+
+      <button class="nav-tab px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="active-allocations">
+        <span>⏱️ Allocated Bays (Active)</span>
+      </button>
+
+      <button class="nav-tab px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="waiting-queue">
+        <span>⏳ Waiting Queue (Priority Max-Heap)</span>
+      </button>
+
+      <button class="nav-tab px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="available-slots">
+        <span>📋 Available Bays (Sorted Order)</span>
+      </button>
+
+      <button class="nav-tab px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="sequence-log">
+        <span>📜 Execution Sequence & Audit</span>
+      </button>
+
+      <button class="nav-tab px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition flex items-center gap-1.5" data-tab="viva-docs">
+        <span>📚 Project Synopsis & Viva Guide</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1 w-full">
+
+    <!-- TAB 1: PARKING LOT GRID (2D MAP SCHEMATIC) -->
+    <section id="tab-lot-grid" class="tab-content space-y-5">
+      <!-- Filter bar -->
+      <div class="glass-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 border border-slate-800">
+        <div class="flex flex-wrap items-center gap-3 text-xs">
+          <span class="font-bold text-slate-300 uppercase tracking-wider font-mono">Bays Filter:</span>
+          
+          <select id="filter-zone" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-200 focus:outline-none focus:border-sky-500">
+            <option value="ALL">All Zones & Floors</option>
+            <option value="Zone A">Zone A - Entrance Bay (Floor 1)</option>
+            <option value="Zone B">Zone B - Eco EV Station (Floor 1)</option>
+            <option value="Zone C">Zone C - Level 2 Deck</option>
+            <option value="Zone D">Zone D - Logistics & Rooftop</option>
+          </select>
+
+          <select id="filter-type" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-200 focus:outline-none focus:border-sky-500">
+            <option value="ALL">All Vehicle Types</option>
+            <option value="Car">Car Bays</option>
+            <option value="EV">EV Charging Bays</option>
+            <option value="Bike">Bike Bays</option>
+            <option value="Handicapped">Accessibility / Handicapped</option>
+            <option value="Heavy">Heavy / Logistics</option>
+          </select>
+
+          <select id="filter-avail" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-200 focus:outline-none focus:border-sky-500">
+            <option value="ALL">All Statuses</option>
+            <option value="AVAILABLE">Available Only</option>
+            <option value="OCCUPIED">Occupied Only</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="App.openAllocateModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Auto-Allocate (Min-Heap)
+          </button>
+        </div>
+      </div>
+
+      <!-- 2D Parking Lot Layout -->
+      <div id="parking-lot-grid" class="space-y-6">
+        <!-- Rendered by parkingLot.js -->
+      </div>
+    </section>
+
+    <!-- TAB 2: SMART ALLOCATE & RELEASE -->
+    <section id="tab-smart-allocate" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Allocation Form -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                Vehicle Bay Allocation Entry
+              </h2>
+              <p class="text-xs text-slate-400 font-mono">Min-Heap extractMin() with O(log N) proximity selection</p>
+            </div>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              O(log N)
+            </span>
+          </div>
+
+          <div id="selected-slot-banner" class="hidden mb-4 p-3 bg-sky-950/60 border border-sky-500/40 rounded-xl text-xs text-sky-200 font-mono"></div>
+
+          <form id="allocate-form" class="space-y-4 text-xs font-sans">
+            <input type="hidden" id="alloc-slot-id" value="">
+
+            <div>
+              <label class="block font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">Vehicle Registration Plate *</label>
+              <input type="text" id="alloc-plate" required placeholder="e.g. MH 12 AB 1234 or DL 04 XY 9009"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-mono uppercase tracking-wider placeholder-slate-600 focus:outline-none focus:border-sky-500">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">Vehicle Category *</label>
+                <select id="alloc-type" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 focus:outline-none focus:border-sky-500">
+                  <option value="Car">Car (Standard)</option>
+                  <option value="EV">EV (Electric Charging Bay)</option>
+                  <option value="Bike">Bike (Two-Wheeler)</option>
+                  <option value="Handicapped">Handicapped / Accessible</option>
+                  <option value="Heavy">Heavy / Commercial</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">Driver Name</label>
+                <input type="text" id="alloc-driver" placeholder="e.g. Rahul Sharma"
+                       class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">Driver Contact Number</label>
+              <input type="tel" id="alloc-phone" placeholder="e.g. +91 98765 43210"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500">
+            </div>
+
+            <!-- Priority flags -->
+            <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-2">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1 font-mono">Priority Weight Modifiers (Max-Heap / Sift-Up):</span>
+              
+              <label class="flex items-center gap-2 text-rose-300 cursor-pointer">
+                <input type="checkbox" id="alloc-emergency" class="w-4 h-4 rounded text-rose-600">
+                <span class="font-bold">🚨 Emergency Vehicle (Ambulance / Fire)</span> - Priority 1000 + 100% Tariff Waived
+              </label>
+
+              <label class="flex items-center gap-2 text-sky-300 cursor-pointer">
+                <input type="checkbox" id="alloc-handicap" class="w-4 h-4 rounded text-sky-600">
+                <span class="font-bold">♿ Accessibility / Disabled</span> - Closest Ground Floor Bay + 50% Concession
+              </label>
+
+              <label class="flex items-center gap-2 text-amber-300 cursor-pointer">
+                <input type="checkbox" id="alloc-vip" class="w-4 h-4 rounded text-amber-600">
+                <span class="font-bold">👑 VIP / Faculty Delegation</span> - Priority reservation score boost
+              </label>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Allocate Optimal Bay via Min-Heap
+            </button>
+          </form>
+        </div>
+
+        <!-- Student Project DSA Explainer -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            DSA Mini-Project Architecture
+          </h3>
+
+          <div class="space-y-3 text-xs text-slate-300 leading-relaxed font-sans">
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+              <strong class="text-sky-400 font-mono text-xs block mb-1">1. Priority Min-Heap Allocation</strong>
+              <p>The system stores vacant bays inside a binary <strong>Min-Heap</strong>. The heap invariant guarantees the bay with minimal distance $d$ to the gate is positioned at root $i = 0$. <code class="text-amber-300 font-mono">extractMin()</code> executes in <strong class="text-emerald-400 font-mono">O(log N)</strong>, sifting down in logarithmic time.</p>
+            </div>
+
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+              <strong class="text-amber-400 font-mono text-xs block mb-1">2. Starvation Prevention (Aging in Max-Heap)</strong>
+              <p>When all matching slots are occupied, incoming vehicles enter a <strong>Max-Heap Waiting Queue</strong>. To prevent regular cars from starving due to VIP arrivals, an aging algorithm adds $+10$ points for every minute waited.</p>
+            </div>
+
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800">
+              <strong class="text-emerald-400 font-mono text-xs block mb-1">3. Automated Reallocation Trigger</strong>
+              <p>When a bay is released, the system calculates parking fee, updates the database, and immediately dequeues the top waiting vehicle from the Max-Heap, auto-allocating the bay without human intervention!</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: DSA VISUALIZER SANDBOX (STAR FEATURE) -->
+    <section id="tab-dsa-visualizer" class="tab-content hidden space-y-7">
+      
+      <!-- SUB-SECTION 1: BINARY SEARCH VISUALIZER WITH PSEUDOCODE -->
+      <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse"></span>
+              <h2 class="text-base font-bold text-white">Binary Search Visualizer & CLRS Pseudocode Tracer</h2>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">Low, Mid, High pointer positions and dynamic code line highlight</p>
+          </div>
+          <span class="text-xs font-mono font-bold px-3 py-1 rounded-full bg-pink-500/10 text-pink-300 border border-pink-500/20">
+            Time: O(log₂ N)
+          </span>
+        </div>
+
+        <!-- Search Controls -->
+        <form id="bs-search-form" class="flex flex-wrap items-center gap-3 mb-4">
+          <select id="bs-search-type" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-pink-500 font-mono">
+            <option value="id">Search by Slot ID (e.g. B-103)</option>
+            <option value="distance">Search by Distance Proximity (e.g. 40)</option>
+          </select>
+
+          <input type="text" id="bs-search-query" required placeholder="Type B-103 or distance..."
+                 class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-pink-500">
+
+          <button type="submit" class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-md shadow-pink-600/20">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Trace Binary Search
+          </button>
+        </form>
+
+        <!-- Step Controls -->
+        <div id="bs-controls" class="hidden flex flex-wrap items-center justify-between bg-slate-900/90 p-3 rounded-xl border border-slate-800 mb-4 gap-2">
+          <div class="flex items-center gap-2">
+            <button onclick="DSAVisualizer.prevBSStep()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+              ◀ Prev Step
+            </button>
+            <button onclick="DSAVisualizer.nextBSStep()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+              Next Step ▶
+            </button>
+            <button id="bs-play-btn" onclick="DSAVisualizer.toggleBSAutoPlay()" class="px-3 py-1.5 rounded-lg bg-pink-600/20 hover:bg-pink-600/40 text-pink-300 border border-pink-500/30 text-xs font-semibold">
+              ▶ Auto Play
+            </button>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">Pointers: <span class="text-sky-400 font-bold">LOW</span> | <span class="text-pink-400 font-bold">MID</span> | <span class="text-purple-400 font-bold">HIGH</span></span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          <!-- Step info description -->
+          <div id="bs-step-info" class="hidden lg:col-span-2 bg-slate-900 rounded-xl p-4 border border-slate-800"></div>
+
+          <!-- Pseudocode Line-by-Line Box -->
+          <div id="bs-pseudocode-box" class="lg:col-span-1"></div>
+        </div>
+
+        <!-- Array Visualization Container -->
+        <div id="bs-array-container" class="overflow-x-auto min-h-[110px] flex items-center justify-center bg-slate-950/80 rounded-xl border border-slate-900 p-4">
+          <p class="text-xs text-slate-500 font-mono">Enter a search query above (e.g. "B-103" or distance "35") to trace binary search pointers.</p>
+        </div>
+      </div>
+
+      <!-- SUB-SECTION 2: MIN-HEAP VISUALIZER (TREE & ARRAY) -->
+      <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <h2 class="text-base font-bold text-white">Min-Heap Allocation Tree & 1D Array Layout</h2>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">Binary Tree satisfying heap property: parent &le; children (Distance criteria)</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              Root = Closest Bay
+            </span>
+            <button onclick="App.loadHeapVisualizer()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+              Refresh Heap
+            </button>
+          </div>
+        </div>
+
+        <!-- 1D Array View -->
+        <div class="mb-5">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono mb-2">1D Heap Array Representation (Indices 0..N-1):</h4>
+          <div id="heap-array-view" class="bg-slate-950/90 p-3.5 rounded-xl border border-slate-900 overflow-x-auto"></div>
+        </div>
+
+        <!-- SVG Tree View -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono mb-2">Binary Tree Visual Layout:</h4>
+          <div id="heap-tree-view" class="w-full bg-slate-950/90 p-4 rounded-xl border border-slate-900 overflow-x-auto flex justify-center items-center min-h-[280px]"></div>
+        </div>
+      </div>
+
+      <!-- SUB-SECTION 3: SORTING ALGORITHM BENCHMARK -->
+      <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <h2 class="text-base font-bold text-white">Sorting Algorithms Comparative Benchmark</h2>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">Side-by-side execution analysis: QuickSort vs MergeSort vs HeapSort</p>
+          </div>
+
+          <div class="flex items-center gap-2 font-mono text-xs">
+            <select id="sort-benchmark-key" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-200">
+              <option value="distance">Sort by Distance</option>
+              <option value="id">Sort by Slot ID</option>
+              <option value="floor">Sort by Floor</option>
+              <option value="hourly_rate">Sort by Hourly Rate</option>
+            </select>
+
+            <select id="sort-benchmark-order" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-200">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+
+            <button onclick="App.runSortingBenchmark()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition">
+              Run Benchmark
+            </button>
+          </div>
+        </div>
+
+        <div id="sorting-benchmark-results"></div>
+      </div>
+
+    </section>
+
+    <!-- TAB 4: ACTIVE ALLOCATIONS -->
+    <section id="tab-active-allocations" class="tab-content hidden space-y-5">
+      <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white">Occupied Parking Bays & Live Meter Tracking</h2>
+            <p class="text-xs text-slate-400 font-mono">Live duration counter, bill accumulator, and thermal slip generator</p>
+          </div>
+          <span id="active-alloc-count" class="text-xs font-mono font-bold px-3 py-1 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20">
+            0 Active
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse font-sans">
+            <thead>
+              <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+                <th class="py-3 px-4">Bay ID</th>
+                <th class="py-3 px-4">Vehicle Plate</th>
+                <th class="py-3 px-4">Vehicle Category</th>
+                <th class="py-3 px-4">Driver Name</th>
+                <th class="py-3 px-4">Duration Elapsed</th>
+                <th class="py-3 px-4">Current Meter</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="active-allocations-tbody" class="text-xs divide-y divide-slate-800/40"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: WAITING VEHICLES PRIORITY QUEUE -->
+    <section id="tab-waiting-queue" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Enqueue Form -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800">
+          <h3 class="text-sm font-bold text-white mb-1">Enqueue Waiting Driver</h3>
+          <p class="text-xs text-slate-400 font-mono mb-4">Inserts vehicle into Max-Heap with Starvation Prevention aging</p>
+
+          <form id="wait-queue-form" class="space-y-3.5 text-xs font-sans">
+            <div>
+              <label class="block font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">Plate Number *</label>
+              <input type="text" id="wait-plate" required placeholder="e.g. MH 12 HC 7007"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white font-mono uppercase tracking-wider focus:outline-none focus:border-amber-500">
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">Driver Name</label>
+              <input type="text" id="wait-driver" placeholder="e.g. Vinod Kulkarni"
+                     class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-amber-500">
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">Vehicle Category</label>
+              <select id="wait-type" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+                <option value="Car">Car</option>
+                <option value="EV">EV</option>
+                <option value="Bike">Bike</option>
+                <option value="Heavy">Heavy</option>
+                <option value="Handicapped">Handicapped</option>
+              </select>
+            </div>
+
+            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-2 text-xs">
+              <label class="flex items-center gap-2 text-rose-300 cursor-pointer">
+                <input type="checkbox" id="wait-emergency" class="w-3.5 h-3.5 rounded text-rose-600">
+                <span>🚨 Emergency (+900 priority pts)</span>
+              </label>
+              <label class="flex items-center gap-2 text-sky-300 cursor-pointer">
+                <input type="checkbox" id="wait-handicap" class="w-3.5 h-3.5 rounded text-sky-600">
+                <span>♿ Accessible (+400 priority pts)</span>
+              </label>
+              <label class="flex items-center gap-2 text-amber-300 cursor-pointer">
+                <input type="checkbox" id="wait-vip" class="w-3.5 h-3.5 rounded text-amber-600">
+                <span>👑 VIP Reservation (+150 pts)</span>
+              </label>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">
+              Enqueue into Max-Heap
+            </button>
+          </form>
+        </div>
+
+        <!-- Waiting Queue Table -->
+        <div class="glass-card rounded-2xl p-6 border border-slate-800 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white">Max-Priority Queue (Queued Waiting Vehicles)</h3>
+              <p class="text-xs text-slate-400 font-mono">Root vehicle is automatically served when an occupied slot is released</p>
+            </div>
+            <span id="waiting-queue-count" class="text-xs font-mono font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              0 Queued
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+                  <th class="py-3 px-4">Position</th>
+                  <th class="py-3 px-4">Ticket</th>
+                  <th class="py-3 px-4">Plate</th>
+                  <th class="py-3 px-4">Type</th>
+                  <th class="py-3 px-4">Driver</th>
+                  <th class="py-3 px-4">Priority Score</th>
+                  <th class="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="waiting-queue-tbody" class="text-xs divide-y divide-slate-800/40"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 6: AVAILABLE SLOTS (SORTED ORDER) -->
+    <section id="tab-available-slots" class="tab-content hidden space-y-5">
+      <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white">Vacant Parking Bays (Maintained in Sorted Order)</h2>
+            <p class="text-xs text-slate-400 font-mono">Ascending order by distance from Entry Gate 01</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span id="avail-slots-count" class="text-xs font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+              0 Available
+            </span>
+            <button onclick="App.openAddSlotModal()" class="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Insert New Bay
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+                <th class="py-3 px-4">Bay ID</th>
+                <th class="py-3 px-4">Zone</th>
+                <th class="py-3 px-4">Floor</th>
+                <th class="py-3 px-4">Category</th>
+                <th class="py-3 px-4">Distance (d)</th>
+                <th class="py-3 px-4">Hourly Tariff</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="available-slots-tbody" class="text-xs divide-y divide-slate-800/40"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 7: SEQUENCE AUDIT LOG -->
+    <section id="tab-sequence-log" class="tab-content hidden space-y-5">
+      <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white">System Allocation Sequence & Audit Trail</h2>
+            <p class="text-xs text-slate-400 font-mono">Chronological execution record with Algorithm Big-O notations</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="App.exportSequenceCSV()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition flex items-center gap-1.5 border border-slate-700">
+              <span>📥 Export CSV</span>
+            </button>
+            <button onclick="App.refreshSequenceLog()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition">
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div id="sequence-log-container"></div>
+      </div>
+    </section>
+
+    <!-- TAB 8: DSA PROJECT SYNOPSIS & VIVA GUIDE (ACADEMIC LAB REPORT) -->
+    <section id="tab-viva-docs" class="tab-content hidden space-y-6">
+      <div class="glass-card rounded-2xl p-8 border border-slate-800 space-y-6 text-sm text-slate-300">
+        
+        <!-- Academic Header Block -->
+        <div class="border-b border-slate-800 pb-5">
+          <div class="text-[11px] font-mono text-sky-400 uppercase tracking-widest font-bold">Project Synopsis & Lab Viva Reference</div>
+          <h2 class="text-xl sm:text-2xl font-black text-white mt-1">Smart Parking Search & Allocation System</h2>
+          <p class="text-xs text-slate-400 mt-1 font-mono">Course: Data Structures and Algorithms (Mini Project) • Semester V</p>
+        </div>
+
+        <!-- Problem Statement & Objectives -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+            <h3 class="text-xs font-bold font-mono text-sky-400 uppercase">1. Problem Definition</h3>
+            <p class="text-xs text-slate-300 leading-relaxed font-sans">
+              Traditional parking lots suffer from inefficient manual or linear searches, resulting in $O(N)$ allocation latency, vehicle queuing, and congestion. 
+              The objective of this project is to model parking spaces as a dynamic ordered priority data structure, reducing search and allocation complexity to <strong>$O(\log N)$</strong> using Min-Heaps and Binary Search.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+            <h3 class="text-xs font-bold font-mono text-emerald-400 uppercase">2. Key Technical Objectives</h3>
+            <ul class="text-xs text-slate-300 space-y-1 font-sans list-disc pl-4">
+              <li>Maintain available bays in strictly sorted order by proximity distance $d$.</li>
+              <li>Provide instant $O(\log N)$ lookup using Binary Search for bay IDs or distance ranges.</li>
+              <li>Implement Min-Heap allocation where the root holds the closest vacant space.</li>
+              <li>Prevent starvation in waiting vehicles queue via an <strong>Aging Algorithm</strong>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Complexity Matrix -->
+        <div class="space-y-3">
+          <h3 class="text-xs font-bold font-mono text-white uppercase tracking-wider">3. Theoretical Complexity Analysis</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border border-slate-800 rounded-xl overflow-hidden font-mono">
+              <thead class="bg-slate-900 text-slate-300 font-bold uppercase text-[10px]">
+                <tr>
+                  <th class="p-3 border-b border-slate-800">Operation</th>
+                  <th class="p-3 border-b border-slate-800">Data Structure / Method</th>
+                  <th class="p-3 border-b border-slate-800">Time (Avg)</th>
+                  <th class="p-3 border-b border-slate-800">Time (Worst)</th>
+                  <th class="p-3 border-b border-slate-800">Space Aux</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800">
+                <tr>
+                  <td class="p-2.5 font-bold text-white">Search by Bay ID or Distance</td>
+                  <td class="p-2.5 text-sky-400">Binary Search</td>
+                  <td class="p-2.5 text-emerald-400">O(log N)</td>
+                  <td class="p-2.5 text-emerald-400">O(log N)</td>
+                  <td class="p-2.5 text-slate-400">O(1)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-white">Bay Auto-Allocation</td>
+                  <td class="p-2.5 text-sky-400">Min-Heap Extract-Min</td>
+                  <td class="p-2.5 text-emerald-400">O(log N)</td>
+                  <td class="p-2.5 text-emerald-400">O(log N)</td>
+                  <td class="p-2.5 text-slate-400">O(1)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-white">Bay Release / Insert</td>
+                  <td class="p-2.5 text-sky-400">Min-Heap Insert (Sift-Up)</td>
+                  <td class="p-2.5 text-emerald-400">O(log N)</td>
+                  <td class="p-2.5 text-emerald-400">O(log N)</td>
+                  <td class="p-2.5 text-slate-400">O(1)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-white">Initial Heap Building</td>
+                  <td class="p-2.5 text-sky-400">Floyd's Algorithm</td>
+                  <td class="p-2.5 text-emerald-400">O(N)</td>
+                  <td class="p-2.5 text-emerald-400">O(N)</td>
+                  <td class="p-2.5 text-slate-400">O(1)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-white">Waiting Queue Prioritization</td>
+                  <td class="p-2.5 text-sky-400">Max-Heap with Aging</td>
+                  <td class="p-2.5 text-emerald-400">O(log M)</td>
+                  <td class="p-2.5 text-emerald-400">O(log M)</td>
+                  <td class="p-2.5 text-slate-400">O(M)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-white">Multi-Attribute Sorting</td>
+                  <td class="p-2.5 text-sky-400">QuickSort / MergeSort</td>
+                  <td class="p-2.5 text-emerald-400">O(N log N)</td>
+                  <td class="p-2.5 text-amber-400">O(N²) [Quick]</td>
+                  <td class="p-2.5 text-slate-400">O(log N) / O(N)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top Viva Voce Questions & Model Answers -->
+        <div class="space-y-4">
+          <h3 class="text-xs font-bold font-mono text-white uppercase tracking-wider">4. Essential Viva Voce Questions & Answers</h3>
+
+          <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5 font-sans">
+            <h4 class="font-bold text-sky-400 text-xs font-mono uppercase">Q1: Why use a Min-Heap instead of a Sorted Array for slot allocation?</h4>
+            <p class="text-xs text-slate-300">
+              <strong>Answer:</strong> In a sorted array, peeking the closest bay is $O(1)$, but removing it requires shifting all $N-1$ elements, taking $O(N)$ time. When a car departs and the bay is released, re-inserting it into a sorted array also takes $O(N)$ due to element shifts. 
+              In contrast, a <strong>Min-Heap</strong> achieves <strong>$O(\log N)$</strong> for both extraction and insertion. For $N = 10,000$ bays, $\log_2(10000) \approx 14$ operations versus up to 10,000 shifts in an array.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5 font-sans">
+            <h4 class="font-bold text-sky-400 text-xs font-mono uppercase">Q2: How does the system prevent vehicle starvation in the waiting queue?</h4>
+            <p class="text-xs text-slate-300">
+              <strong>Answer:</strong> If higher-priority vehicles (e.g. VIP or emergency vehicles) arrive continuously, standard vehicles could wait indefinitely (starvation). We implement an <strong>Aging Algorithm</strong>:
+              $$\text{Priority Score} = \text{Base Priority} + (\text{Minutes Waited} \times 10)$$
+              Over time, a regular vehicle's score naturally exceeds newly arriving VIP vehicles, guaranteeing eventual service without deadlock.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5 font-sans">
+            <h4 class="font-bold text-sky-400 text-xs font-mono uppercase">Q3: How is Binary Search applied to slot maintenance?</h4>
+            <p class="text-xs text-slate-300">
+              <strong>Answer:</strong> Vacant slots are kept sorted by distance or bay ID. Binary search maintains three pointers: <code class="text-sky-300 font-mono">low</code>, <code class="text-pink-300 font-mono">mid = low + (high - low) / 2</code>, and <code class="text-purple-300 font-mono">high</code>. At each iteration, comparing the middle element with the target eliminates half of the remaining search space, guaranteeing lookup in $\le \lceil \log_2 N \rceil$ steps. It also computes the insertion point when new bays are commissioned.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- 1. Release Bay Confirmation Modal -->
+  <div id="modal-release" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-2xl max-w-md w-full border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center gap-3 text-rose-400">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-white font-mono">Release Parking Bay</h3>
+          <p class="text-xs text-slate-400 font-mono">Duration calculate & restore to Min-Heap</p>
+        </div>
+      </div>
+
+      <input type="hidden" id="release-target-slot" value="">
+      <input type="hidden" id="release-alloc-id" value="">
+
+      <p id="release-slot-banner" class="text-xs text-slate-300 font-sans"></p>
+
+      <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1 font-mono">
+        <div>• Calculates total elapsed time and tariff rate.</div>
+        <div>• Returns slot to Min-Heap in <strong class="text-sky-400">O(log N)</strong>.</div>
+        <div>• Checks Waiting Priority Queue to auto-allocate waiting driver!</div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 font-mono text-xs">
+        <button onclick="App.closeReleaseModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition">
+          Cancel
+        </button>
+        <button onclick="App.confirmRelease()" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold transition shadow-lg shadow-rose-600/20">
+          Confirm & Release
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Generic Modal (Invoice / Sift Result / Thermal Slip) -->
+  <div id="modal-generic" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="modal-generic-content" class="glass-card rounded-2xl max-w-lg w-full border border-slate-800 shadow-2xl"></div>
+  </div>
+
+  <!-- 3. Add New Bay Modal -->
+  <div id="modal-add-slot" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-2xl max-w-md w-full border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-bold text-white font-mono">Insert New Parking Bay</h3>
+        <button onclick="App.closeAddSlotModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <form id="add-slot-form" class="space-y-3 text-xs font-sans">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1 font-mono">Slot ID (Unique) *</label>
+          <input type="text" id="add-slot-id" required placeholder="e.g. A-106 or B-205"
+                 class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono uppercase focus:border-sky-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1 font-mono">Floor *</label>
+            <input type="number" id="add-slot-floor" required min="1" max="5" value="1"
+                   class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1 font-mono">Bay Number *</label>
+            <input type="number" id="add-slot-bay" required min="1" value="6"
+                   class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1 font-mono">Zone Name *</label>
+          <input type="text" id="add-slot-zone" required value="Zone A - Entrance Bay"
+                 class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1 font-mono">Compatible Type *</label>
+            <select id="add-slot-type" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200">
+              <option value="Car">Car</option>
+              <option value="EV">EV</option>
+              <option value="Bike">Bike</option>
+              <option value="Handicapped">Handicapped</option>
+              <option value="Heavy">Heavy</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1 font-mono">Distance (d meters) *</label>
+            <input type="number" id="add-slot-distance" step="0.5" required min="1" value="25.0"
+                   class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1 font-mono">Hourly Rate ($) *</label>
+            <input type="number" id="add-slot-rate" min="5" value="30"
+                   class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+          <div class="flex items-center pt-5">
+            <label class="flex items-center gap-2 text-emerald-400 cursor-pointer">
+              <input type="checkbox" id="add-slot-ev" class="w-4 h-4 rounded text-emerald-600">
+              <span class="font-bold">EV Charger Dock</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-[11px] text-slate-400 font-mono">
+          Determines sorted position via <strong>Binary Search</strong> in O(log N) and sifts up into Min-Heap!
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 font-mono">
+          <button type="button" onclick="App.closeAddSlotModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold transition">
+            Insert Bay
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Edit Student Profile Modal (Engineering Mini Project) -->
+  <div id="modal-edit-profile" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-2xl max-w-md w-full border border-slate-800 p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-white font-mono">Student & Lab Credentials</h3>
+          <p class="text-xs text-slate-400">Used for printed ticket slips and project reports</p>
+        </div>
+        <button onclick="App.closeEditProfileModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <form onsubmit="App.handleSaveProfileSubmit(event)" class="space-y-3 text-xs font-sans">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1 font-mono">Student Name *</label>
+          <input type="text" id="edit-student-name" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 font-mono">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Roll Number *</label>
+            <input type="text" id="edit-student-roll" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Division *</label>
+            <input type="text" id="edit-student-div" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1 font-mono">Department / Institute *</label>
+          <input type="text" id="edit-student-dept" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 font-mono">
+          <button type="button" onclick="App.closeEditProfileModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold">
+            Save Credentials
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- GLOBAL SPINNER -->
+  <div id="global-spinner" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center">
+    <div class="flex flex-col items-center gap-3">
+      <div class="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+      <span class="text-xs font-mono text-sky-400 font-bold">Executing DSA Step...</span>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toast-container"></div>
+
+  <!-- JAVASCRIPT MODULES -->
+  <script src="js/api.js"></script>
+  <script src="js/visualizer.js"></script>
+  <script src="js/parkingLot.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
