@@ -68,13 +68,15 @@ app.use((req, res) => {
 
 // Initialize Database and Start Server
 initDatabase().then(() => {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
     console.log(`🚗 Smart Parking Search & Allocation System (DSA Project)`);
-    console.log(`🌐 Web Server running at: http://localhost:${PORT}`);
+    console.log(`🌐 Web Server running on port: ${PORT}`);
     console.log(`📊 REST API endpoints available under /api/*`);
     console.log(`=======================================================`);
   });
 }).catch(err => {
   console.error('Failed to initialize database:', err);
 });
+
+module.exports = app;
